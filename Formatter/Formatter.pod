@@ -1,0 +1,166 @@
+=head1 NAME
+
+Formatter - The Formatter API specification
+
+=head1 VERSION
+
+1.0
+
+=head1 SYNOPSIS
+
+Formatters are Perl Modules conforming to the following
+specification. Formatters are intended to assist the conversion
+between different markup syntaxes.
+
+=head1 INTRODUCTION
+
+The basic idea of Formatters is to have a simple and standard way to
+convert from one format to another. This is a common problem across
+many applications, and so, a simple API for all applications to use is
+desireable.
+
+Formatters operate on strings. Formatters can convert any string from
+any format to any other format. For example, you have a plain text
+string, possibly with a bit of syntax, and you want to convert it to
+HTML. You will simply use the appropriate Formatter module, and call
+the C<format> constructor method on it, with the text string as
+parameter. You may then call either the C<document> or C<fragment>
+method to get HTML returned.
+
+
+
+=head1 DESCRIPTION
+
+=head2 Module naming convention
+
+A Formatter module should be named with the format it is converted
+B<to> first, then the format it is converted B<from>. For example, the
+module L<Formatter::HTML::Textile> will convert from the Textile
+syntax to HTML.
+
+
+
+=head2 Methods
+
+=over
+
+=item C<format($string [, further parameters])>
+
+This is a constructor method and shall initialize the formatter. As
+argument it must take a string with the text that one wants
+converted. You may pass additional parameters to the constructor, but
+the Formatter may not rely on it being present. It must not issue a
+warning or croak if the parameters are not present and must use a
+sensible default for any missing parameters.
+
+This method must return the object as a C<bless>ed reference. 
+
+=item C<document([$charset])>
+
+The C<document> method may be called on the object after it has been
+initialized with the C<format> method. It takes an I<optional>
+parameter that specifies the character set of the document. The
+C<document> method must include the charset declaration as appropriate
+for the output format. For HTML this is a C<meta> element, as
+specified in section 5.2.2 of the HTML4 specification
+L<http://www.w3.org/TR/REC-html40/charset.html#spec-char-encoding>. For
+XML, it can be set with the C<encoding> parameter in the Prolog.
+
+It must return a full document. In the case where an underlying helper
+module has no concept of full document, the method must nevertheless
+make a best effort to return something that can be regarded a
+standalone document.
+
+=item C<fragment>
+
+The C<fragment> method may be called on the object after it has been
+initialized with the C<format> method. It shall only return a minimal
+fragment of the converted text, as little as possible markup shall be
+added to the fragment. In the case where only a full document is
+available from an underlying helper module, it should make a best
+effort to strip down to a minimal fragment.
+
+=item C<links>
+
+This method should return all links found the input plain text string
+as an arrayref where each element is a hash, with keys C<url> and
+C<title>, the former containing the URL, the latter the text of the
+link. If none can be found, an empty list should be returned. If no
+title can be found, the title key should have an empty string. The
+title must contain only character data, no markup.
+
+
+=item C<title>
+
+This method should return the title of the document or C<undef> if
+none can be found.
+
+=back
+
+=head2 Return Perl character strings
+
+The methods that return string must make sure those strings are
+proper character-oriented strings, not byte sequences as they were
+prior to Perl 5.6. 
+
+=head2 Inheritance from other modules
+
+A Formatter module may inherit methods from other modules. It may
+inherit all the methods mentioned above if they exist in a suitable
+parent class, and also other methods, to aid setting syntax-specific
+parameters.
+
+Formatter module implementors are encouraged to contact the API
+author(s) to discuss methods that should be included in the API.
+
+=head2 Meaning of fragment vs. document
+
+It is to be anticipated that not all formats have a concept of full
+document and others not a fragment. To save the user the trouble of
+dealing with an error situation, the Formatter must make a best effort
+to return both. What is meant by a fragment and a full document varies
+from format to format, and must be dealt with on a per format basis.
+
+In the case where it really doesn't make sense to return either a
+fragment or document, the Formatter may produce a warning, but must
+nevertheless return a best effort fragment or document.
+
+For HTML, a full document is understood to be a complete and
+valid HTML document. The largest possible HTML fragment consists of
+the child elements of the C<body> element, excluding C<body> itself.
+
+For XML, any well-formed XML document can be a full document, and any
+well-balanced XML region can be a fragment. An XML fragment should not
+contain a Prolog or Document Type Declaration.
+
+=head1 AUTHOR
+
+Kjetil Kjernsmo, E<lt>kjetilk@cpan.orgE<gt>
+
+=head1 SUBVERSION REPOSITORY
+
+This specification is currently maintained in a Subversion
+repository. The trunk can be checked out anonymously using e.g.:
+
+  svn checkout http://svn.kjernsmo.net/Formatter/trunk Formatter
+
+=head1 ACKNOWLEDGEMENTS
+
+The Formatter API was originally conceived on the openguides channel
+on irc.perl.org. In particular, Tom Insam was an important architect
+of the API.
+
+=head1 EXAMPLES
+
+The module L<Formatter::HTML::Preformatted> contains a minimal
+Formatter by the author of the specification.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2005 by Kjetil Kjernsmo
+
+This specification can be redistributed and/or modified under the same
+terms as Perl itself. The author asks that only modules conformant
+with the specification uses the Formatter:: namespace.
+
+=cut
